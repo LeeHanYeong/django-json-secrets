@@ -28,9 +28,18 @@ def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
     :param depth:
     :return:
     """
+    if not module:
+        frame = inspect.stack()[1][0]
+        module = inspect.getmodule(frame)
+
+    # 불러올 JSON파일명
+    file_name = module.__name__.split('.')[-1]
+
     if start:
         # logging.info('= Set JSON Secrets Start =')
-        print('= Set JSON Secrets Start =')
+        print('- JSON Secrets ({})'.format(
+            file_name,
+        ))
 
     def eval_obj(obj):
         """
@@ -62,10 +71,6 @@ def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
             return obj
             # raise ValueError(f'Cannot eval object({obj}), Exception: {e}')
 
-    if not module:
-        frame = inspect.stack()[1][0]
-        module = inspect.getmodule(frame)
-
     # SECRETS_MODULES의 내용을 현재 모듈(secrets_json)에 import
     try:
         modules_dict = getattr(module, 'SECRETS_MODULES', {})
@@ -87,8 +92,6 @@ def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
         except AttributeError:
             raise ImproperlyConfigured('The SECRET_DIR settings must exist')
 
-        # 불러올 JSON파일명
-        file_name = module.__name__.split('.')[-1]
         secrets_path = os.path.join(secrets_dir, f'{file_name}.json')
         secrets_obj = json.loads(open(secrets_path, 'rt').read())
 
@@ -123,6 +126,12 @@ def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
         for index, item in enumerate(secrets_obj):
             # list의 해당 index에 item을 평가한 값을 할당
             secrets_obj[index] = eval_obj(item)
+            print(
+                ' {depth}{item}'.format(
+                    depth=' ' * depth,
+                    item=secrets_obj[index],
+                )
+            )
 
     if depth == 0:
-        print('= Set JSON Secrets End =')
+        print('')
