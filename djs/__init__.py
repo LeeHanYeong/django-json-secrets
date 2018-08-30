@@ -23,8 +23,8 @@ def print(*args, **kwargs):
     ]
 
     # CI 환경변수가 시스템에 존재하면 print 함수 실행하지 않고 종료
-    for environ_variables in ci_environ_variables:
-        if os.environ.get(environ_variables):
+    for environ_variable in ci_environ_variables:
+        if os.environ.get(environ_variable):
             return
     builtins.print(*args, **kwargs)
 
