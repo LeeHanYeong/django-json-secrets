@@ -174,6 +174,7 @@ import_secrets()
 ### Display secrets
 
 When the `settings` module is loaded, the set secret values are output to the console.
+With using CI(Travis CI, Jenkins), there's no output for security.
 
 ```
 - JSON Secrets (base)
