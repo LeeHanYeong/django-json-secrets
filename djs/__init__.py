@@ -4,12 +4,29 @@ import json
 import numbers
 import os
 import sys
+import builtins
 
 from django.core.exceptions import ImproperlyConfigured
 
 __all__ = (
     'import_secrets',
 )
+
+
+def print(*args, **kwargs):
+    """
+    Travis CI, Jenkins 환경에서는 print 함수가 실행되지 않도록 내장 함수 오버라이딩
+    """
+    ci_environ_variables = [
+        'TRAVIS_CI',        # Travis CI 디폴트 환경변수 https://docs.travis-ci.com/user/environment-variables/
+        'JENKINS_URL',     # Jenkis 디폴트 환경변수 https://wiki.jenkins.io/display/JENKINS/Building+a+software+project
+    ]
+
+    # CI 환경변수가 시스템에 존재하면 print 함수 실행하지 않고 종료
+    for environ_variables in ci_environ_variables:
+        if os.environ.get(environ_variables):
+            return
+    builtins.print(*args, **kwargs)
 
 
 def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
