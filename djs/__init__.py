@@ -12,6 +12,11 @@ __all__ = (
 )
 
 
+def print_log(msg, show=True):
+    if show:
+        print(msg)
+
+
 def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
     """
     Python객체를 받아, 해당 객체의 key-value쌍을
@@ -32,14 +37,16 @@ def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
         frame = inspect.stack()[1][0]
         module = inspect.getmodule(frame)
 
+    show_log = getattr(module, 'PRINT_JSON_SETTINGS', True)
+
     # 불러올 JSON파일명
     file_name = module.__name__.split('.')[-1]
 
     if start:
         # logging.info('= Set JSON Secrets Start =')
-        print('- JSON Secrets ({})'.format(
+        print_log('- JSON Secrets ({})'.format(
             file_name,
-        ))
+        ), show_log)
 
     def eval_obj(obj):
         """
@@ -67,7 +74,7 @@ def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
             # 없는 변수를 참조할 때 발생하는 예외
             return obj
         except Exception as e:
-            # print(f'Cannot eval object({obj}), Exception: {e}')
+            # print_log(f'Cannot eval object({obj}), Exception: {e}', print_setting)
             return obj
             # raise ValueError(f'Cannot eval object({obj}), Exception: {e}')
 
@@ -102,20 +109,21 @@ def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
         for key, value in secrets_obj.items():
             # value가 dict거나 list일 경우 재귀적으로 함수를 다시 실행
             if isinstance(value, dict) or isinstance(value, list):
-                print(' {depth}{key}'.format(depth=' ' * depth, key=key))
+                print_log(' {depth}{key}'.format(depth=' ' * depth, key=key), show_log)
                 import_secrets(value, module, start=False, depth=depth + 1)
             # 그 외의 경우 value를 평가한 값을 할당
             else:
                 secrets_obj[key] = eval_obj(value)
                 # logging.info(f' settings.{key} = {value}')
-                print(
+                print_log(
                     ' {depth}{key} = {value}{value_type}'.format(
                         depth=' ' * depth,
                         key=key,
                         value=secrets_obj[key],
                         # value_type=f' (type: {type(secrets_obj[key])})'
                         value_type=''
-                    )
+                    ),
+                    show_log
                 )
             # set_config()가 처음 호출된 loop에서만 setattr()을 실행
             if start:
@@ -126,12 +134,13 @@ def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
         for index, item in enumerate(secrets_obj):
             # list의 해당 index에 item을 평가한 값을 할당
             secrets_obj[index] = eval_obj(item)
-            print(
+            print_log(
                 ' {depth}{item}'.format(
                     depth=' ' * depth,
                     item=secrets_obj[index],
-                )
+                ),
+                show_log
             )
 
     if depth == 0:
-        print('')
+        print_log('', show_log)

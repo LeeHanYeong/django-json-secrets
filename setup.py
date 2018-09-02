@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-json-secrets',
-    version='0.1.9',
+    version='0.1.10',
     description='JSON secrets to Django settings module',
     long_description=README,
     # long_description_content_type='text/markdown',

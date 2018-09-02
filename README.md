@@ -171,7 +171,7 @@ from .base import *
 import_secrets()
 ```
 
-### Display secrets
+### Display secrets & unactivate
 
 When the `settings` module is loaded, the set secret values are output to the console.
 
@@ -184,4 +184,12 @@ When the `settings` module is loaded, the set secret values are output to the co
   .localhost
   127.0.0.1
   .lhy.kr
+```
+
+If you set the `PRINT_JSON_SETTINGS` value of the `settings` module to `False`, the settings will not be output.
+
+```
+...
+PRINT_JSON_SETTINGS = False
+import_secrets()
 ```
