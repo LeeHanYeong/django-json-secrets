@@ -3,6 +3,7 @@ import inspect
 import json
 import numbers
 import os
+import re
 import sys
 
 from django.core.exceptions import ImproperlyConfigured
@@ -37,7 +38,7 @@ def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
         frame = inspect.stack()[1][0]
         module = inspect.getmodule(frame)
 
-    show_log = getattr(module, 'PRINT_JSON_SETTINGS', True)
+    show_log = getattr(module, 'PRINT_JSON_SETTINGS', False)
 
     # 불러올 JSON파일명
     file_name = module.__name__.split('.')[-1]
@@ -144,3 +145,22 @@ def import_secrets(secrets_obj=None, module=None, start=True, depth=0):
 
     if depth == 0:
         print_log('', show_log)
+        # 마지막 단계에서, import한 모듈에 djs_secrets_로 시작하는 속성(dict)이 있다면
+        # 해당 속성을 마지막에 return해줄 객체와 합침
+        # 마지막에 return할 dict가 우선이며, 없는 항목은 previous_에서 가져와 할당
+        # **동시에 여러 module들을 import한 경우는 대비하지 않음
+        setattr_prefix = 'djs_secrets_'
+        p = re.compile(r'^{prefix}.*'.format(prefix=setattr_prefix))
+        djs_name_list = list(filter(p.match, dir(module)))
+        djs_name = djs_name_list[0] if djs_name_list else None
+
+        if djs_name:
+            previous_secrets_dict = getattr(module, djs_name)
+            secrets_obj = dict(previous_secrets_dict, **secrets_obj)
+
+        setattr_name = '{prefix}{name}'.format(
+            prefix=setattr_prefix,
+            name=module.__name__,
+        )
+        setattr(module, setattr_name, secrets_obj)
+        return secrets_obj
